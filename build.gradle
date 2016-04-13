@@ -1,0 +1,40 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+sourceCompatibility = '1.6'
+targetCompatibility = '1.6'
+
+version = '0.0.1'
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'minecraft'
+        url = 'https://libraries.minecraft.net/'
+    }
+}
+
+configurations {
+    buildOnly
+}
+
+dependencies {
+    compile 'net.minecraft:launchwrapper:1.12'
+    compile 'org.apache.logging.log4j:log4j-core:2.0-beta9'
+    // TODO Fix this
+    buildOnly files('C:/Users/Simon/.gradle/caches/minecraft/net/minecraftforge/forge/1.8.9-11.15.1.1808/stable/22/forgeBin-1.8.9-11.15.1.1808.jar')
+    compile files('C:/Users/Simon/.gradle/caches/minecraft/net/minecraftforge/forge/1.8.9-11.15.1.1808/start')
+}
+
+sourceSets.main.compileClasspath += [ configurations.buildOnly ]
+
+jar {
+    manifest {
+        attributes(
+            "Main-Class": "com.simon816.sponge.bootstrap.Bootstrap",
+            "Class-Path": "libraries/net/minecraft/launchwrapper/1.12/launchwrapper-1.12.jar"
+                        + " libraries/net/sf/jopt-simple/jopt-simple/4.6/jopt-simple-4.6.jar"
+                        + " minecraft_server.1.8.9.jar"
+        )
+    }
+}
