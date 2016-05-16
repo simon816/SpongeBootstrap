@@ -55,8 +55,7 @@ public class Bootstrap {
     private static void removeFromSysArgs() {
         // Remove SpongeCoremod from args as we load it ourselves
         List<String> coreModsArgs = new ArrayList<String>(Arrays.asList(System.getProperty("fml.coreMods.load", "").split(",")));
-        while (coreModsArgs.contains(COREMOD)) {
-            coreModsArgs.remove(COREMOD);
+        while (coreModsArgs.remove(COREMOD)) {
         }
         StringBuilder coreMods = new StringBuilder();
         for (String cm : coreModsArgs) {
@@ -181,10 +180,27 @@ public class Bootstrap {
         @Override
         public void injectIntoClassLoader(LaunchClassLoader classLoader) {
             // Mixin system already loaded early so don't load twice
-            List<?> tweakClasses = (List<?>) Launch.blackboard.get("TweakClasses");
+            @SuppressWarnings("unchecked")
+            List<String> tweakClasses = (List<String>) Launch.blackboard.get("TweakClasses");
+            boolean duplicateMixin = false;
             while (tweakClasses.remove("org.spongepowered.asm.launch.MixinTweaker")) {
+                duplicateMixin = true;
             }
-            System.out.println(Launch.blackboard);
+            // Another mod is using mixin system
+            if (duplicateMixin) {
+                try {
+                    // This feels wrong but it works
+                    // For some reason 'register' gets called before 'preInit'
+                    // even though MixinTweaker calls preInit in constructor
+                    Class<?> c = Class.forName("org.spongepowered.asm.launch.MixinBootstrap");
+                    Field init = c.getDeclaredField("initialised");
+                    init.setAccessible(true);
+                    init.set(null, true);
+                    tweakClasses.add("org.spongepowered.asm.launch.MixinTweaker");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
