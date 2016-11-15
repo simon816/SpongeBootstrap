@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.jar.Attributes;
 
 public class Bootstrap {
 
@@ -28,7 +29,9 @@ public class Bootstrap {
     private static final String POST_TWEAKER = "com.simon816.sponge.bootstrap.Bootstrap$PostFMLTweaker";
     public static final String FML_TWEAKER = "net.minecraftforge.fml.common.launcher.FMLServerTweaker";
 
-    private static final Logger logger = LogManager.getLogger("SpongeBootstrap");
+    static final Logger logger = LogManager.getLogger("SpongeBootstrap");
+
+    static File spongeJar;
 
     public static void main(String[] args) {
         logger.info("Detecting environment...");
@@ -79,25 +82,29 @@ public class Bootstrap {
             @Override
             public boolean accept(File pathname) {
                 String fn = pathname.getName().toLowerCase();
-                return fn.endsWith(".jar") && fn.contains("forge") && fn.contains("-universal") && fn.contains("1.8.9");
+                return fn.endsWith(".jar") && fn.contains("forge") && fn.contains("-universal") && supportedVersion(fn);
             }
         });
-        findJar(new File(rootDir, "mods"), "sponge", new FileFilter() {
+        spongeJar = findJar(new File(rootDir, "mods"), "sponge", new FileFilter() {
 
             @Override
             public boolean accept(File pathname) {
                 String fn = pathname.getName().toLowerCase();
-                return fn.endsWith(".jar") && fn.contains("sponge") && fn.contains("1.8.9");
+                return fn.endsWith(".jar") && fn.contains("sponge") && supportedVersion(fn);
             }
         });
     }
 
-    private static void findJar(File directory, String jarName, FileFilter filter) {
+    static boolean supportedVersion(String fn) {
+        return fn.contains("1.8.9") || fn.contains("1.10.2") || fn.contains("1.11");
+    }
+
+    private static File findJar(File directory, String jarName, FileFilter filter) {
         File[] files = directory.listFiles(filter);
         if (files == null) {
             System.err.println("An error occured when listing directory contents");
             System.exit(1);
-            return;
+            return null;
         }
         if (files.length == 0) {
             System.err.println("Could not find " + jarName + " jar. Please make sure a" + jarName + " jar exists.");
@@ -127,6 +134,7 @@ public class Bootstrap {
             e.printStackTrace();
             System.exit(1);
         }
+        return jarFile;
     }
 
     private static void load(String[] args) {
@@ -168,10 +176,26 @@ public class Bootstrap {
                 System.arraycopy(rootPlugins, 0, rootPlugins2, 0, rootPlugins.length);
                 rootPlugins2[rootPlugins.length] = COREMOD;
                 rootPluginsField.set(null, rootPlugins2);
+                mixinHackLookAwayNow();
                 logger.info("SpongeCoremod successfully injected into FML");
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+
+        private void mixinHackLookAwayNow() throws ReflectiveOperationException {
+            if (spongeJar == null) { // In dev environment
+                return;
+            }
+            // Stop mixin from trying to load spongeforge for a second time
+            Class<?> attrClass = Class.forName("org.spongepowered.asm.launch.platform.MainAttributes");
+            Method mOf = attrClass.getMethod("of", File.class);
+            mOf.setAccessible(true);
+            Object inst = mOf.invoke(null, spongeJar);
+            Field fAttr = attrClass.getDeclaredField("attributes");
+            fAttr.setAccessible(true);
+            Attributes attr = (Attributes) fAttr.get(inst);
+            attr.remove(new Attributes.Name("FMLCorePlugin"));
         }
     }
 
@@ -204,7 +228,7 @@ public class Bootstrap {
         }
     }
 
-    private static class SimpleTweaker implements ITweaker {
+    static class SimpleTweaker implements ITweaker {
 
         @Override
         public void acceptOptions(List<String> args, File gameDir, File assetsDir, String profile) {
