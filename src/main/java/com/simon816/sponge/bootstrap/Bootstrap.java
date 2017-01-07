@@ -107,7 +107,7 @@ public class Bootstrap {
             return null;
         }
         if (files.length == 0) {
-            System.err.println("Could not find " + jarName + " jar. Please make sure a" + jarName + " jar exists.");
+            System.err.println("Could not find " + jarName + " jar. Please make sure a " + jarName + " jar exists.");
             System.exit(1);
         }
         int idx = 0;
