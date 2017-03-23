@@ -4,7 +4,7 @@ apply plugin: 'eclipse'
 sourceCompatibility = '1.6'
 targetCompatibility = '1.6'
 
-version = '0.2.0'
+version = '0.3.0'
 
 repositories {
     mavenCentral()
@@ -12,21 +12,19 @@ repositories {
         name = 'minecraft'
         url = 'https://libraries.minecraft.net/'
     }
-}
-
-configurations {
-    buildOnly
+    maven {
+        name = 'forge'
+        url = 'http://files.minecraftforge.net/maven/'
+    }
 }
 
 dependencies {
     compile 'net.minecraft:launchwrapper:1.12'
     compile 'org.apache.logging.log4j:log4j-core:2.0-beta9'
+    compile 'net.minecraftforge:forge:1.11.2-13.20.0.2228:universal'
     // TODO Fix this
-    buildOnly files('C:/Users/Simon/.gradle/caches/minecraft/net/minecraftforge/forge/1.8.9-11.15.1.1808/stable/22/forgeBin-1.8.9-11.15.1.1808.jar')
-    compile files('C:/Users/Simon/.gradle/caches/minecraft/net/minecraftforge/forge/1.8.9-11.15.1.1808/start')
+    compile files('C:/Users/Simon/.gradle/caches/minecraft/net/minecraftforge/forge/1.11.2-13.20.0.2227/start')
 }
-
-sourceSets.main.compileClasspath += [ configurations.buildOnly ]
 
 jar {
     manifest {
@@ -37,6 +35,7 @@ jar {
                         + " minecraft_server.1.8.9.jar"
                         + " minecraft_server.1.10.2.jar"
                         + " minecraft_server.1.11.jar"
+                        + " minecraft_server.1.11.2.jar"
         )
     }
 }
