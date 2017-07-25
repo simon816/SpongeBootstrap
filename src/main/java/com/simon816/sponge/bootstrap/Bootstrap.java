@@ -43,15 +43,17 @@ public class Bootstrap {
             try {
                 Class.forName("net.minecraft.launchwrapper.Launch");
                 logger.info("Found launch wrapper, continuing");
-                findAndLoadJars();
-                load(args);
             } catch (ClassNotFoundException e1) {
                 System.err.println("Failed to load Launch class");
+                e1.printStackTrace();
                 System.exit(1);
             } catch (NoClassDefFoundError e2) {
                 System.err.println("Failed to load Launch class");
+                e2.printStackTrace();
                 System.exit(1);
             }
+            findAndLoadJars();
+            load(args);
         }
     }
 
@@ -96,7 +98,7 @@ public class Bootstrap {
     }
 
     static boolean supportedVersion(String fn) {
-        return fn.contains("1.8.9") || fn.contains("1.10.2") || fn.contains("1.11");
+        return fn.contains("1.8.9") || fn.contains("1.10.2") || fn.contains("1.11") || fn.contains("1.12");
     }
 
     private static File findJar(File directory, String jarName, FileFilter filter) {

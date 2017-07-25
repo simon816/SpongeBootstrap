@@ -4,7 +4,7 @@ apply plugin: 'eclipse'
 sourceCompatibility = '1.6'
 targetCompatibility = '1.6'
 
-version = '0.3.0'
+version = '0.4.0'
 
 repositories {
     mavenCentral()
@@ -36,6 +36,7 @@ jar {
                         + " minecraft_server.1.10.2.jar"
                         + " minecraft_server.1.11.jar"
                         + " minecraft_server.1.11.2.jar"
+                        + " minecraft_server.1.12.jar"
         )
     }
 }
