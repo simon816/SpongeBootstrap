@@ -4,7 +4,7 @@ apply plugin: 'eclipse'
 sourceCompatibility = '1.6'
 targetCompatibility = '1.6'
 
-version = '0.4.0'
+version = '0.5.0'
 
 repositories {
     mavenCentral()
@@ -26,17 +26,27 @@ dependencies {
     compile files('C:/Users/Simon/.gradle/caches/minecraft/net/minecraftforge/forge/1.11.2-13.20.0.2227/start')
 }
 
+project.ext.supportedVersions = ["1.8.9", "1.10.2", "1.11", "1.11.2", "1.12", "1.12.1"]
+
+task setSupportedVersions(type: Copy) {
+    from(sourceSets.main.java.srcDirs)
+    into 'build/sources/java'
+    filter(org.apache.tools.ant.filters.ReplaceTokens,
+            tokens: ['supportedVersions': project.ext.supportedVersions.join(",")])
+}
+
+compileJava.source = setSupportedVersions.outputs.files
+compileJava.dependsOn setSupportedVersions
+
+
 jar {
     manifest {
         attributes(
             "Main-Class": "com.simon816.sponge.bootstrap.Bootstrap",
             "Class-Path": "libraries/net/minecraft/launchwrapper/1.12/launchwrapper-1.12.jar"
-                        + " libraries/net/sf/jopt-simple/jopt-simple/4.6/jopt-simple-4.6.jar"
-                        + " minecraft_server.1.8.9.jar"
-                        + " minecraft_server.1.10.2.jar"
-                        + " minecraft_server.1.11.jar"
-                        + " minecraft_server.1.11.2.jar"
-                        + " minecraft_server.1.12.jar"
+                        + " libraries/net/sf/jopt-simple/jopt-simple/5.0.3/jopt-simple-5.0.3.jar"
+                        + " libraries/net/sf/jopt-simple/jopt-simple/4.6/jopt-simple-4.6.jar "
+                        + project.ext.supportedVersions.collect{ "minecraft_server.${it}.jar" }.join(" ")
         )
     }
 }

@@ -98,7 +98,13 @@ public class Bootstrap {
     }
 
     static boolean supportedVersion(String fn) {
-        return fn.contains("1.8.9") || fn.contains("1.10.2") || fn.contains("1.11") || fn.contains("1.12");
+        // Replaced by gradle (see build.gradle)
+        for (String supported : "@supportedVersions@".split(",")) {
+            if (fn.contains(supported)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static File findJar(File directory, String jarName, FileFilter filter) {
