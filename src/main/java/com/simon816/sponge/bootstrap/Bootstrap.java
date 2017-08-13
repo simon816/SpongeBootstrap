@@ -92,7 +92,7 @@ public class Bootstrap {
             @Override
             public boolean accept(File pathname) {
                 String fn = pathname.getName().toLowerCase();
-                return fn.endsWith(".jar") && fn.contains("sponge") && supportedVersion(fn);
+                return fn.endsWith(".jar") && fn.contains("spongeforge") && supportedVersion(fn);
             }
         });
     }
