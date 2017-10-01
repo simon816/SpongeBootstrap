@@ -4,7 +4,7 @@ apply plugin: 'eclipse'
 sourceCompatibility = '1.6'
 targetCompatibility = '1.6'
 
-version = '0.5.1'
+version = '0.6.0'
 
 repositories {
     mavenCentral()
@@ -18,15 +18,17 @@ repositories {
     }
 }
 
+sourceSets {
+    lib
+}
+
 dependencies {
     compile 'net.minecraft:launchwrapper:1.12'
     compile 'org.apache.logging.log4j:log4j-core:2.0-beta9'
-    compile 'net.minecraftforge:forge:1.11.2-13.20.0.2228:universal'
-    // TODO Fix this
-    compile files('C:/Users/Simon/.gradle/caches/minecraft/net/minecraftforge/forge/1.11.2-13.20.0.2227/start')
+    compile 'net.minecraftforge:forge:1.12.2-14.23.0.2486:universal'
 }
 
-project.ext.supportedVersions = ["1.8.9", "1.10.2", "1.11", "1.11.2", "1.12", "1.12.1"]
+project.ext.supportedVersions = ["1.8.9", "1.10.2", "1.11", "1.11.2", "1.12", "1.12.1", "1.12.2"]
 
 task setSupportedVersions(type: Copy) {
     from(sourceSets.main.java.srcDirs)
@@ -37,6 +39,7 @@ task setSupportedVersions(type: Copy) {
 
 compileJava.source = setSupportedVersions.outputs.files
 compileJava.dependsOn setSupportedVersions
+compileJava.classpath += sourceSets.lib.output
 
 
 jar {
