@@ -84,7 +84,8 @@ public class Bootstrap {
             @Override
             public boolean accept(File pathname) {
                 String fn = pathname.getName().toLowerCase();
-                return fn.endsWith(".jar") && fn.contains("forge") && fn.contains("-universal") && supportedVersion(fn);
+                return fn.endsWith(".jar") && (fn.contains("forge") || fn.contains("FTBserver")) 
+                    && fn.contains("-universal") && supportedVersion(fn);
             }
         });
         spongeJar = findJar(new File(rootDir, "mods"), "sponge", new FileFilter() {
