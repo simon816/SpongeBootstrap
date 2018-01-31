@@ -84,7 +84,7 @@ public class Bootstrap {
             @Override
             public boolean accept(File pathname) {
                 String fn = pathname.getName().toLowerCase();
-                return fn.endsWith(".jar") && (fn.contains("forge") || fn.contains("FTBserver")) 
+                return fn.endsWith(".jar") && (fn.contains("forge") || fn.contains("ftbserver")) 
                     && fn.contains("-universal") && supportedVersion(fn);
             }
         });
