@@ -4,7 +4,7 @@ apply plugin: 'eclipse'
 sourceCompatibility = '1.6'
 targetCompatibility = '1.6'
 
-version = '0.6.2'
+version = '0.6.3'
 
 repositories {
     mavenCentral()
@@ -28,7 +28,7 @@ dependencies {
     compile 'net.minecraftforge:forge:1.12.2-14.23.0.2486:universal'
 }
 
-project.ext.supportedVersions = ["1.8.9", "1.10.2", "1.11", "1.11.2", "1.12", "1.12.1", "1.12.2"]
+project.ext.supportedVersions = ["1.11.2", "1.12", "1.12.1", "1.12.2"]
 
 task setSupportedVersions(type: Copy) {
     from(sourceSets.main.java.srcDirs)

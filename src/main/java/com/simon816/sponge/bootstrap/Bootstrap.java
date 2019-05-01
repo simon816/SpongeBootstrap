@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.jar.Attributes;
+import java.util.Set;
 
 public class Bootstrap {
 
@@ -84,8 +84,8 @@ public class Bootstrap {
             @Override
             public boolean accept(File pathname) {
                 String fn = pathname.getName().toLowerCase();
-                return fn.endsWith(".jar") && (fn.contains("forge") || fn.contains("ftbserver")) 
-                    && fn.contains("-universal") && supportedVersion(fn);
+                return fn.endsWith(".jar") && (fn.contains("forge") || fn.contains("ftbserver"))
+                        && fn.contains("-universal") && supportedVersion(fn);
             }
         });
         spongeJar = findJar(new File(rootDir, "mods"), "sponge", new FileFilter() {
@@ -185,54 +185,49 @@ public class Bootstrap {
                 System.arraycopy(rootPlugins, 0, rootPlugins2, 0, rootPlugins.length);
                 rootPlugins2[rootPlugins.length] = COREMOD;
                 rootPluginsField.set(null, rootPlugins2);
-                mixinHackLookAwayNow();
+                stopMixinReInjection();
                 logger.info("SpongeCoremod successfully injected into FML");
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
 
-        private void mixinHackLookAwayNow() throws ReflectiveOperationException {
-            if (spongeJar == null) { // In dev environment
-                return;
-            }
-            // Stop mixin from trying to load spongeforge for a second time
-            Class<?> attrClass = Class.forName("org.spongepowered.asm.launch.platform.MainAttributes");
-            Method mOf = attrClass.getMethod("of", File.class);
-            mOf.setAccessible(true);
-            Object inst = mOf.invoke(null, spongeJar);
-            Field fAttr = attrClass.getDeclaredField("attributes");
-            fAttr.setAccessible(true);
-            Attributes attr = (Attributes) fAttr.get(inst);
-            attr.remove(new Attributes.Name("FMLCorePlugin"));
+        private void stopMixinReInjection() throws ReflectiveOperationException {
+            Class<?> agentCls = Class.forName("org.spongepowered.asm.launch.platform.MixinPlatformAgentFML");
+            Field fcoreMods = agentCls.getDeclaredField("loadedCoreMods");
+            fcoreMods.setAccessible(true);
+            @SuppressWarnings("unchecked")
+            Set<String> loadedCoreMods = (Set<String>) fcoreMods.get(null);
+            loadedCoreMods.add(COREMOD);
         }
+
     }
 
     public static class PostFMLTweaker extends SimpleTweaker {
 
         @Override
         public void injectIntoClassLoader(LaunchClassLoader classLoader) {
-            // Mixin system already loaded early so don't load twice
-            @SuppressWarnings("unchecked")
-            List<String> tweakClasses = (List<String>) Launch.blackboard.get("TweakClasses");
-            boolean duplicateMixin = false;
-            while (tweakClasses.remove("org.spongepowered.asm.launch.MixinTweaker")) {
-                duplicateMixin = true;
-            }
-            // Another mod is using mixin system
-            if (duplicateMixin) {
-                try {
-                    // This feels wrong but it works
-                    // For some reason 'register' gets called before 'preInit'
-                    // even though MixinTweaker calls preInit in constructor
-                    Class<?> c = Class.forName("org.spongepowered.asm.launch.MixinBootstrap");
-                    Field init = c.getDeclaredField("initialised");
-                    init.setAccessible(true);
-                    init.set(null, true);
-                    tweakClasses.add("org.spongepowered.asm.launch.MixinTweaker");
-                } catch (Exception e) {
-                    e.printStackTrace();
+            // Fix location of jar file
+            try {
+                Field fPlugins = CoreModManager.class.getDeclaredField("loadPlugins");
+                fPlugins.setAccessible(true);
+                @SuppressWarnings("unchecked")
+                List<Object> plugins = (List<Object>) fPlugins.get(null);
+                for (Object plugin : plugins) {
+                    if (plugin.getClass().getName().equals("net.minecraftforge.fml.relauncher.CoreModManager$FMLPluginWrapper")) {
+                        Field fName = plugin.getClass().getDeclaredField("name");
+                        fName.setAccessible(true);
+                        String name = (String) fName.get(plugin);
+                        if ("SpongeCoremod".equals(name)) {
+                            Field fLocation = plugin.getClass().getDeclaredField("location");
+                            fLocation.setAccessible(true);
+                            fLocation.set(plugin, (File) spongeJar);
+                            break;
+                        }
+                    }
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }
