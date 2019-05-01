@@ -207,6 +207,11 @@ public class Bootstrap {
 
         @Override
         public void injectIntoClassLoader(LaunchClassLoader classLoader) {
+            // Mixin system already loaded early so don't load twice
+            @SuppressWarnings("unchecked")
+            List<String> tweakClasses = (List<String>) Launch.blackboard.get("TweakClasses");
+            while (tweakClasses.remove("org.spongepowered.asm.launch.MixinTweaker")) {
+            }
             // Fix location of jar file
             try {
                 Field fPlugins = CoreModManager.class.getDeclaredField("loadPlugins");
