@@ -35,26 +35,32 @@ public class Bootstrap {
 
     public static void main(String[] args) {
         logger.info("Detecting environment...");
+        boolean doGradleLoad;
         try {
             Class.forName("GradleStartServer");
             logger.info("Detected gradle development environment, continuing");
-            loadGradle(args);
+            doGradleLoad = true;
         } catch (ClassNotFoundException e) {
-            try {
-                Class.forName("net.minecraft.launchwrapper.Launch");
-                logger.info("Found launch wrapper, continuing");
-            } catch (ClassNotFoundException e1) {
-                System.err.println("Failed to load Launch class");
-                e1.printStackTrace();
-                System.exit(1);
-            } catch (NoClassDefFoundError e2) {
-                System.err.println("Failed to load Launch class");
-                e2.printStackTrace();
-                System.exit(1);
-            }
-            findAndLoadJars();
-            load(args);
+            doGradleLoad = false;
         }
+        if (doGradleLoad) {
+            loadGradle(args);
+            return;
+        }
+        try {
+            Class.forName("net.minecraft.launchwrapper.Launch");
+            logger.info("Found launch wrapper, continuing");
+        } catch (ClassNotFoundException e1) {
+            System.err.println("Failed to load Launch class");
+            e1.printStackTrace();
+            System.exit(1);
+        } catch (NoClassDefFoundError e2) {
+            System.err.println("Failed to load Launch class");
+            e2.printStackTrace();
+            System.exit(1);
+        }
+        findAndLoadJars();
+        load(args);
     }
 
     private static void removeFromSysArgs() {
@@ -193,7 +199,12 @@ public class Bootstrap {
         }
 
         private void stopMixinReInjection() throws ReflectiveOperationException {
-            Class<?> agentCls = Class.forName("org.spongepowered.asm.launch.platform.MixinPlatformAgentFML");
+            Class<?> agentCls;
+            try {
+                agentCls = Class.forName("org.spongepowered.asm.launch.platform.MixinPlatformAgentFML");
+            } catch (ClassNotFoundException e) {
+                agentCls = Class.forName("org.spongepowered.asm.launch.platform.MixinPlatformAgentFMLLegacy");
+            }
             Field fcoreMods = agentCls.getDeclaredField("loadedCoreMods");
             fcoreMods.setAccessible(true);
             @SuppressWarnings("unchecked")
